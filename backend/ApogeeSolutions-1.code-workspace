@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"name": "ApogeeSolutions-1",
+			"path": ".."
+		},
+		{
+			"path": "../frontend/public/tiles"
+		}
+	],
+	"settings": {}
+}

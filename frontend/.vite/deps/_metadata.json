@@ -1,0 +1,44 @@
+{
+  "hash": "448b0ee7",
+  "configHash": "107c20f0",
+  "lockfileHash": "008882a3",
+  "browserHash": "614b4d61",
+  "optimized": {
+    "@googlemaps/js-api-loader": {
+      "src": "../../node_modules/@googlemaps/js-api-loader/dist/index.js",
+      "file": "@googlemaps_js-api-loader.js",
+      "fileHash": "e51c9bd9",
+      "needsInterop": false
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "c1f32490",
+      "needsInterop": true
+    },
+    "react-markdown": {
+      "src": "../../node_modules/react-markdown/index.js",
+      "file": "react-markdown.js",
+      "fileHash": "c964b90d",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "5af1f963",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "5f3084b2",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "react-B6J-hxuQ": {
+      "file": "react-B6J-hxuQ.js",
+      "isDynamicEntry": false
+    }
+  }
+}

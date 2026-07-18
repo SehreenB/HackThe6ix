@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "apogee-solutions",
+  "private_key_id": "cbc0b5bb4d12cbbf452b20ff6a12f201e7f2113c",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDR7sWn/bkUB0C9\nyhaoJ+YaJMQhlW9WK/wNHULV2bzlsdxwmHro9ZdAxrD7zDUlqMjOLax9drUVFc+s\nPVnWxoXb29N1tATk5B8yPkJPIFGWtaZjQGW0EKixe0l9MSr28PxFhJWS58xN0t1j\nfjp2um3ETnwM2wTVZFy80YACva7EHEBvzziUy+3e9ru4+U+7OR3MrGU+AIdBckIf\neZmDriTnGCm37CaV+yVPqgnf6iFMhw/0y/4eyuTlvcGhQqpayAw99Aqbdto0iXXs\nTUILtmsbhcfjYc1NUWmkbljaJjxmVlwev86n7Wo7VkyJ9WoQqoOsqZxhn8Us3qvy\nyDjlSZhvAgMBAAECggEAWfkzzWP4xpS1MqJCQ5+WBu5rANnC9fOz+wrnci/3vZoV\nGEzBoMZhJOoDQGes/47vQS5iFwOhaIAImZFRx7Md+7SjVHbrAg6jMC1uzerUDPud\nbDxVWm8pXaexP26rM1rlRAYm9OdTsKcHK3UWKXyNPu1ETV4xHCP/ew1vB720AWgy\nrLvQY2zqW/agjB3jf9PTZ6iaJsYCEIgniN2gCy5XbWj5J5i1CLT18QUL3D7ZomzN\nbLuICjAFglzkB4kZmesQZfuAJg0AV7jm1Fsxo5hh6BuyQoYSPUOzjqhb5L2ND0e/\nR33ZpOJLdVUKijxsjuKnXdxO5F5N767yi8NcRvuAgQKBgQD/kBJrILyYfAgdVNYd\n0BeAkvA7dagbIRh6G+WVmD+7Yq+wOR9ilhTgswwmbr38wu4A2vdNjj3SpalL3S/z\n1mKm8d8DmiZesAWKLdNhUGdDB838ttdMX7SNXwQ7o7JKHf2we5DWhfnl5OQYHGZZ\nhxsht6tpF1wI4vZvhICCPl63VwKBgQDSSrc25Lxzazw7DsURIM1L5R5ciUYKXMak\nDufbl025GtNOZetY4GHxJN1/ZIid2rEx3eMVR32wc4j9ov8WvFntWDki/WcsXPwY\nib20s+0u7SsfHSc5g+gZkfAt3QwsfyI3kNXbvoix/Cylc2bBGqpga88OBmhRMmJr\nSiJO8ofwqQKBgEHd5RFdR55ZYVIF+oWGi3gk5uu8QE51sjROmlZ6/foSzksx/cfP\n/KOJIhmJs0fBCcyIovKHNaHj9oVKBcDnwVdbwWnRQhBnd5YMh41uRp79FPcMPOM/\nS26gTZv9bccygZ8JyeOwdh7tZmhccXijnLeM+g3E6oCT1oYZdXGcF5dTAoGALPON\nsG06n01n5ZPlqiCh4bxLPiqVzzc/uuf4xebU1WGXk6WTpj7okLx5oHakAWIzCF7O\n4MiUZHh96wHBl2GRs3ttUz5ppIEH3lLrO0pOw/4sfo0jylaY8YZRmewrYwOWE9yg\n6kUTQUCPZpqBd3u0ucGx0+SovdqQUTDanpeXWWkCgYEApOaHj3zfjKgblRWMYDcK\ndSbfkSv40h4F4Fz2/RWWiW3pcTk0AJBIAlvkw3lFD9pQMLKXWaheJ5ATYMuaS7Pc\nAU5CF5OXPxv2AEKh9KDT55oAzKEiyIrZDLDK5zOGlsZ9IZ2nMt49BxapPasWVYpp\nrRz9+ARqPdWQ824P07PTPuU=\n-----END PRIVATE KEY-----\n",
+  "client_email": "apogee-gee@apogee-solutions.iam.gserviceaccount.com",
+  "client_id": "109482732226428858085",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/apogee-gee%40apogee-solutions.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
