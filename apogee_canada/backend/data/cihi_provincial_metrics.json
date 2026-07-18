@@ -1,0 +1,67 @@
+{
+  "NS": {
+    "ed_visits_total": 321969,
+    "median_los_admitted_hours": 17.2,
+    "p90_los_admitted_hours": 56.1
+  },
+  "PE": {
+    "ed_visits_total": 64828,
+    "median_los_admitted_hours": 25.7,
+    "p90_los_admitted_hours": 106.7
+  },
+  "QC": {
+    "ed_visits_total": 3751747,
+    "median_los_admitted_hours": 20.4,
+    "p90_los_admitted_hours": 50.7
+  },
+  "MB": {
+    "ed_visits_total": 469598,
+    "median_los_admitted_hours": 17,
+    "p90_los_admitted_hours": 54.2
+  },
+  "AB": {
+    "ed_visits_total": 2328410,
+    "median_los_admitted_hours": 12.5,
+    "p90_los_admitted_hours": 37.3
+  },
+  "NL": {
+    "ed_visits_total": "data not available",
+    "median_los_admitted_hours": "data not available",
+    "p90_los_admitted_hours": "data not available"
+  },
+  "NT": {
+    "ed_visits_total": "data not available",
+    "median_los_admitted_hours": "data not available",
+    "p90_los_admitted_hours": "data not available"
+  },
+  "NU": {
+    "ed_visits_total": "data not available",
+    "median_los_admitted_hours": "data not available",
+    "p90_los_admitted_hours": "data not available"
+  },
+  "ON": {
+    "ed_visits_total": 6616431,
+    "median_los_admitted_hours": 14.4,
+    "p90_los_admitted_hours": 44.4
+  },
+  "BC": {
+    "ed_visits_total": 1834943,
+    "median_los_admitted_hours": 19.8,
+    "p90_los_admitted_hours": 64.7
+  },
+  "YT": {
+    "ed_visits_total": 40432,
+    "median_los_admitted_hours": 11,
+    "p90_los_admitted_hours": 28.9
+  },
+  "NB": {
+    "ed_visits_total": "data not available",
+    "median_los_admitted_hours": "data not available",
+    "p90_los_admitted_hours": "data not available"
+  },
+  "SK": {
+    "ed_visits_total": 674429,
+    "median_los_admitted_hours": 9.2,
+    "p90_los_admitted_hours": 38.9
+  }
+}
