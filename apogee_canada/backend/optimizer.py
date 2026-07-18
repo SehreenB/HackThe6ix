@@ -80,10 +80,18 @@ class OptimizeRequest(BaseModel):
         default="emergency",
         description='Either "emergency" (any 24-hr ED) or "surgical" (24-hr ED with 24/7 OR)',
     )
+    province: Optional[str] = Field(
+        default=None,
+        description="Optional PRUID to filter candidate placements to a specific province",
+    )
+    weight_by_shortage: bool = Field(
+        default=False,
+        description="Multiply candidate population gain by a shortage factor derived from province physician supply",
+    )
 
     class Config:
         json_schema_extra = {
-            "example": {"n": 5, "access_type": "surgical"}
+            "example": {"n": 5, "access_type": "surgical", "province": "ON", "weight_by_shortage": True}
         }
 
 
@@ -270,8 +278,21 @@ def optimize(body: OptimizeRequest):
     # by sentinel magnitude rather than real routing comparison.
     # The excluded population is surfaced in the response as its own category.
     df, no_road_network_df = _split_road_network_scope(df)
+
+    if body.province:
+        df = df[df["PRUID"] == body.province]
+        no_road_network_df = no_road_network_df[no_road_network_df["PRUID"] == body.province]
+
     no_road_network_pop = int(no_road_network_df["Population"].sum())
     no_road_network_das = len(no_road_network_df)
+
+    shortage_weights = {}
+    unavailable_weighting_pruids = set()
+    if body.weight_by_shortage:
+        from endpoints.workforce import get_workforce_alignment
+        wf_data = get_workforce_alignment()
+        for prov_data in wf_data.get("provincial_data", []):
+            shortage_weights[prov_data["pruid"]] = 241.0 / prov_data["physicians_per_100k"]
 
     used_placeholder_or_data = False
 
@@ -309,11 +330,13 @@ def optimize(body: OptimizeRequest):
             break
 
         best_gain = -1
+        best_raw_pop = -1
         best_candidate = None
         best_newly_covered = None
 
         for candidate in candidates:
             cand_lat, cand_lng = candidate["y"], candidate["x"]
+            cand_pruid = candidate.get("PRUID", "XX")
 
             distances = unserved.apply(
                 lambda row: _haversine_km(cand_lat, cand_lng, row["y"], row["x"]),
@@ -323,8 +346,18 @@ def optimize(body: OptimizeRequest):
             newly_covered_mask = distances <= DISTANCE_RADIUS_KM
             newly_covered_pop = unserved[newly_covered_mask]["Population"].sum()
 
-            if newly_covered_pop > best_gain:
-                best_gain = newly_covered_pop
+            weight = 1.0
+            if body.weight_by_shortage:
+                if cand_pruid in shortage_weights:
+                    weight = shortage_weights[cand_pruid]
+                else:
+                    unavailable_weighting_pruids.add(cand_pruid)
+                    
+            weighted_gain = newly_covered_pop * weight
+
+            if weighted_gain > best_gain:
+                best_gain = weighted_gain
+                best_raw_pop = newly_covered_pop
                 best_candidate = candidate
                 best_newly_covered = unserved[newly_covered_mask]
 
@@ -334,7 +367,8 @@ def optimize(body: OptimizeRequest):
         placed.append({
             "lat": round(float(best_candidate["y"]), 6),
             "lng": round(float(best_candidate["x"]), 6),
-            "pop_gained": int(best_gain),
+            "pop_gained": int(best_raw_pop),
+            "weighted_score": round(best_gain, 2) if body.weight_by_shortage else None,
             "dauid": int(best_candidate["DAUID"]),
             "province": _get_province_name(best_candidate.get("PRUID", "XX")),
             "access_type": body.access_type,
@@ -350,7 +384,7 @@ def optimize(body: OptimizeRequest):
         coverage_curve.append({
             "n_facilities": len(placed),
             "pct_covered": coverage_pct,
-            "pop_gained": int(best_gain),
+            "pop_gained": int(best_raw_pop),
         })
 
     # ─────────────────────────────────────────────────────────────────
@@ -390,7 +424,7 @@ def optimize(body: OptimizeRequest):
     if territory_sentinel_warning:
         warnings.append(territory_sentinel_warning)
 
-    return JSONResponse(content={
+    response_content = {
         "access_type": body.access_type,
         "locations": placed,
         "updated_stats": {
@@ -410,7 +444,7 @@ def optimize(body: OptimizeRequest):
         "excluded_no_road_network": {
             "population": no_road_network_pop,
             "n_das": no_road_network_das,
-            "provinces": sorted(no_road_network_df["Province"].unique().tolist()),
+            "provinces": sorted(no_road_network_df["Province"].unique().tolist()) if not no_road_network_df.empty and "Province" in no_road_network_df.columns else [],
             "note": (
                 "These communities have no road-network routing in the source dataset "
                 "(McGaughey & Peters, 2024, DOI 10.6084/m9.figshare.24082158) and are "
@@ -427,4 +461,9 @@ def optimize(body: OptimizeRequest):
         "data_quality_warnings": warnings if warnings else None,
         # Legacy single-warning field kept for backwards compatibility
         "data_quality_warning": warnings[0] if warnings else None,
-    })
+    }
+
+    if body.weight_by_shortage and unavailable_weighting_pruids:
+        response_content["shortage_data_unavailable"] = sorted(list(unavailable_weighting_pruids))
+
+    return JSONResponse(content=response_content)
