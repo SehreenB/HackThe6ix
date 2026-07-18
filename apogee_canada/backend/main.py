@@ -40,7 +40,8 @@ app.add_middleware(
 # backend function secrets, so only your own Base44 app can call this API.
 # ─────────────────────────────────────────────────────────────────────────────
 import os
-from fastapi import Request, HTTPException
+from fastapi import Request
+from fastapi.responses import JSONResponse
 
 API_KEY = os.getenv("APOGEE_API_KEY")
 
@@ -54,10 +55,16 @@ async def check_api_key(request: Request, call_next):
     if not API_KEY:
         # No key configured on the server at all — fail safe by rejecting,
         # rather than silently running wide open.
-        raise HTTPException(status_code=503, detail="Server API key not configured")
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "Server API key not configured"},
+        )
 
     if request.headers.get("x-api-key") != API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Invalid or missing API key"},
+        )
 
     return await call_next(request)
 
