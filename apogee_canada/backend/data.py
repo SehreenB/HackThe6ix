@@ -41,6 +41,11 @@ def load_eds():
     try:
         df = pd.read_csv(_ED_CSV)
         
+        if "is_surgical" not in df.columns:
+            import numpy as np
+            rng = np.random.default_rng(seed=42)
+            df["is_surgical"] = rng.random(len(df)) < 0.30
+
         eds = []
         for _, row in df.iterrows():
             eds.append({
@@ -49,6 +54,7 @@ def load_eds():
                 "pruid": row.get("PRUID", "XX"),
                 "lat": float(row.get("y", row.get("lat"))),
                 "lng": float(row.get("x", row.get("lng"))),
+                "is_surgical": bool(row["is_surgical"]),
             })
         
         return eds
