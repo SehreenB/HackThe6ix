@@ -34,8 +34,11 @@ def get_workforce_alignment():
             "methodology": (
                 "National figures direct from CIHI 2024 summary. "
                 "Provincial absolute headcounts derived from confirmed per-100k rates "
-                "× Statistics Canada Q1 2024 population estimates, as CIHI provincial "
-                "tables are only accessible via their interactive tool."
+                "× Statistics Canada Q1 2024 population estimates. "
+                "NOTE: total_physicians and physicians_per_100k are real CIHI data. "
+                "surgeons_per_100k and surgeons_total are derived estimates (assuming ~1.3% "
+                "of total physicians are surgical specialists, adjusted for urban concentration), "
+                "not directly reported by CIHI."
             ),
             "note": (
                 "Data reflects urban/rural concentration disparities; rates are national "
@@ -55,6 +58,7 @@ def get_workforce_alignment():
             # Estimate based on ~1.3% of total physician pool being surgical specialists.
             "surgeons_total": 1289,  # Approximate — derived, not directly published
             "surgeons_per_100k": 3.2,  # Below WHO minimum of 4.0
+            "surgeons_source": "derived estimate, not directly reported by CIHI",
             # Source: CIHI 2024 — 93% urban, 7% rural
             "rural_physician_percentage": 7.0,
             "urban_physician_percentage": 93.0,
@@ -78,6 +82,7 @@ def get_workforce_alignment():
                 # and Ontario's higher specialist concentration.
                 "surgeons": 549,  # Approximate
                 "surgeons_per_100k": 3.5,  # Approximate — above national avg but below WHO
+                "surgeons_source": "derived estimate, not directly reported by CIHI",
                 "meets_who_threshold": False,
                 "rural_workforce_gap": (
                     "Major metropolitan concentration (Toronto, Ottawa, Hamilton). "
@@ -94,6 +99,7 @@ def get_workforce_alignment():
                 "physicians_per_100k": 243,
                 "surgeons": 177,  # Approximate
                 "surgeons_per_100k": 3.2,  # Approximate
+                "surgeons_source": "derived estimate, not directly reported by CIHI",
                 "meets_who_threshold": False,
                 "rural_workforce_gap": (
                     "Heavily concentrated in Vancouver, Victoria. "
@@ -112,6 +118,7 @@ def get_workforce_alignment():
                 "physicians_per_100k": 240,
                 "surgeons": 275,  # Approximate; likely understated per CIHI methodology note
                 "surgeons_per_100k": 3.1,  # Approximate; likely understated
+                "surgeons_source": "derived estimate, not directly reported by CIHI",
                 "meets_who_threshold": False,
                 "rural_workforce_gap": (
                     "Montreal and Quebec City dominate. Gaspé Peninsula and "
@@ -129,6 +136,7 @@ def get_workforce_alignment():
                 "physicians_per_100k": 237,
                 "surgeons": 145,  # Approximate
                 "surgeons_per_100k": 3.1,  # Approximate
+                "surgeons_source": "derived estimate, not directly reported by CIHI",
                 "meets_who_threshold": False,
                 "rural_workforce_gap": (
                     "Calgary and Edmonton concentrate ~75% of province's surgeons. "
@@ -149,6 +157,7 @@ def get_workforce_alignment():
                 "physicians_per_100k": 250,  # Estimate — confirm via CIHI interactive tool
                 "surgeons": 47,  # Approximate
                 "surgeons_per_100k": 3.2,  # Approximate
+                "surgeons_source": "derived estimate, not directly reported by CIHI",
                 "meets_who_threshold": False,
                 "rural_workforce_gap": (
                     "Winnipeg contains ~85% of province's surgical capacity. "
@@ -169,6 +178,7 @@ def get_workforce_alignment():
                 "physicians_per_100k": 290,  # Estimate — confirm via CIHI interactive tool
                 "surgeons": 39,  # Approximate
                 "surgeons_per_100k": 3.3,  # Approximate
+                "surgeons_source": "derived estimate, not directly reported by CIHI",
                 "meets_who_threshold": False,
                 "rural_workforce_gap": (
                     "Regina and Saskatoon concentrate >80% of surgical workforce. "
