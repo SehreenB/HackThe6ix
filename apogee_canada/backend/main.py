@@ -35,6 +35,33 @@ app.add_middleware(
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
+# API key check: rejects any request that doesn't include the shared secret.
+# Set APOGEE_API_KEY as an env var on Railway, and the same value in Base44's
+# backend function secrets, so only your own Base44 app can call this API.
+# ─────────────────────────────────────────────────────────────────────────────
+import os
+from fastapi import Request, HTTPException
+
+API_KEY = os.getenv("APOGEE_API_KEY")
+
+@app.middleware("http")
+async def check_api_key(request: Request, call_next):
+    # Allow the root "/" health check and "/docs" through without a key,
+    # so Railway's health check and manual browsing still work.
+    if request.url.path in ("/", "/docs", "/openapi.json"):
+        return await call_next(request)
+
+    if not API_KEY:
+        # No key configured on the server at all — fail safe by rejecting,
+        # rather than silently running wide open.
+        raise HTTPException(status_code=503, detail="Server API key not configured")
+
+    if request.headers.get("x-api-key") != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+
+    return await call_next(request)
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Include optimizer router (POST /api/optimize)
 # ─────────────────────────────────────────────────────────────────────────────
 app.include_router(optimizer_router)
