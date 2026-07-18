@@ -7,11 +7,37 @@ This endpoint demonstrates the investment framework for 1-2 provinces as a worke
 Real implementation would require custom data collection and provincial consultation.
 """
 
+import json
+from pathlib import Path
+
+_DATA_DIR = Path(__file__).parent.parent / "data"
+_CIHI_METRICS_FILE = _DATA_DIR / "cihi_provincial_metrics.json"
+
+_national_ed_context = []
+try:
+    if _CIHI_METRICS_FILE.exists():
+        with open(_CIHI_METRICS_FILE, "r") as f:
+            raw_metrics = json.load(f)
+            
+        for prov, data in raw_metrics.items():
+            _national_ed_context.append({
+                "province": prov,
+                "ed_volume_total": data.get("ed_visits_total"),
+                "median_los_admitted_hrs": data.get("median_los_admitted_hours"),
+                "p90_los_admitted_hrs": data.get("p90_los_admitted_hours")
+            })
+except Exception as e:
+    print(f"Warning: Could not load CIHI metrics: {e}")
+
 def get_investment_analysis():
     """
     Return illustrative investment analysis for Canadian provincial surgical facilities.
     """
     return {
+        "national_ed_context": {
+            "methodology_note": "Source: CIHI, NACRS Emergency Department Visits and Lengths of Stay, 2024–2025. Real national data, province/territory level. Not available for provinces/territories with limited NACRS participation",
+            "provincial_records": _national_ed_context
+        },
         "metadata": {
             "status": "ILLUSTRATIVE EXAMPLE",
             "detail": "Canada has no centralized surgical burden registry equivalent to Liberia's DHIS2. This example demonstrates the investment evaluation framework for Ontario and Manitoba. Real implementation requires provincial health authority consultation and custom data collection.",
