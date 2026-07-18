@@ -47,6 +47,9 @@ API_KEY = os.getenv("APOGEE_API_KEY")
 
 @app.middleware("http")
 async def check_api_key(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
+
     # Allow the root "/" health check and "/docs" through without a key,
     # so Railway's health check and manual browsing still work.
     if request.url.path in ("/", "/docs", "/openapi.json"):
