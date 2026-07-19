@@ -106,7 +106,7 @@ Start with an Executive Summary, then provide Key Findings and Recommendations."
 
 @app.post("/api/brief-finetuned")
 def generate_brief_finetuned(req: BriefRequest):
-    """Generate fine-tuned Qwen policy brief"""
+    """Generate fine-tuned Qwen policy brief, fallback to Claude"""
     try:
         stats_str = json.dumps(req.stats, indent=2)
         locations_str = json.dumps(req.optimizer_results[:3], indent=2) if req.optimizer_results else "No specific locations"
@@ -123,12 +123,37 @@ Generate a policy brief for Canadian health authorities."""
             model="lora",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=2000,
-            temperature=0.7
+            temperature=0.7,
+            timeout=30
         )
         
-        return {"brief": response.choices[0].message.content}
+        return {"brief": response.choices[0].message.content, "model": "finetuned-qwen"}
+    
     except Exception as e:
-        return {"error": str(e), "brief": "Fine-tuned model temporarily unavailable. Using frontier Claude."}
+        # Fallback to Claude if fine-tuned model fails
+        try:
+            stats_str = json.dumps(req.stats, indent=2)
+            locations_str = json.dumps(req.optimizer_results[:3], indent=2) if req.optimizer_results else "No specific locations"
+            
+            prompt = f"""You are a healthcare policy analyst specializing in rural surgical access in Canada.
+
+Given these facility placement statistics:
+{stats_str}
+
+Top recommended facility locations:
+{locations_str}
+
+Generate a policy brief for Canadian health authorities."""
+
+            response = anthropic_client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=1500,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            
+            return {"brief": response.content[0].text, "model": "claude-fallback"}
+        except Exception as fallback_error:
+            return {"error": f"Both models failed: {str(fallback_error)}", "model": "error"}
 
 @app.get("/api/workforce-alignment")
 def get_workforce():
