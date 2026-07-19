@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 load_dotenv()
-
 from data import get_data
 from optimizer import router as optimizer_router
 from brief import generate_brief
