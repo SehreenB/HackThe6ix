@@ -370,6 +370,7 @@ def optimize(body: OptimizeRequest):
             "pop_gained": int(best_raw_pop),
             "weighted_score": round(best_gain, 2) if body.weight_by_shortage else None,
             "dauid": int(best_candidate["DAUID"]),
+            "nearest_town": str(best_candidate.get("nearest_town", "Unknown")),
             "province": _get_province_name(best_candidate.get("PRUID", "XX")),
             "access_type": body.access_type,
         })
