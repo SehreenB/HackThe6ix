@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
 import openai
@@ -17,15 +18,29 @@ FINETUNED_MODEL_URL = "https://clado-ai--freesolo-lora-serving.modal.run/v1"
 finetuned_client = openai.OpenAI(api_key="dummy", base_url=FINETUNED_MODEL_URL)
 
 # Load API key from environment
-API_KEY = os.getenv("apogee_api_key", "default-key-change-me")
+API_KEY = os.getenv("APOGEE_API_KEY")
 
 # Create app
 app = FastAPI(title="Apogee Canada - Surgical Access Optimization")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # API Key middleware
 @app.middleware("http")
 async def verify_api_key(request: Request, call_next):
-    # Temporarily disabled for testing
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    if request.url.path in ["/", "/docs", "/openapi.json", "/health"]:
+        return await call_next(request)
+    api_key = request.headers.get("x-api-key")
+    if api_key != API_KEY:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=401, content={"detail": "Invalid API key"})
     return await call_next(request)
 # Pydantic models
 class OptimizeRequest(BaseModel):
