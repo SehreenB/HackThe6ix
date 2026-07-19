@@ -91,7 +91,7 @@ Context: Frame this for a rural/remote surgical access policy audience. Emphasiz
 
         with client.messages.stream(
             model="claude-sonnet-4-6",
-            max_tokens=1200,
+            max_tokens=4000,
             system="""You are a Canadian health policy analyst specializing in rural and remote surgical access.
 Your audience is provincial health ministry planners and Indigenous health authorities.
 Be clear, data-driven, and focused on equity and sustainability.""",
