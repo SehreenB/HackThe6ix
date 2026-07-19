@@ -1,7 +1,7 @@
 import os
 import json
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Union
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -62,7 +62,7 @@ app.include_router(optimizer_router)
 # Pydantic models
 class BriefRequest(BaseModel):
     stats: dict
-    optimizer_results: list
+    optimizer_results: Union[list, dict]
 
 @app.get("/health")
 def health_check():
@@ -79,17 +79,27 @@ def api_brief(req: BriefRequest):
     Stream a policy brief for Canadian provincial health authorities.
     Uses Claude API with fallback to hardcoded brief.
     """
+    results = req.optimizer_results if isinstance(req.optimizer_results, list) else [req.optimizer_results]
+    for res in results:
+        if "pop_gain" in res and "pop_gained" not in res:
+            res["pop_gained"] = res["pop_gain"]
+
     return StreamingResponse(
-        generate_brief(req.stats, req.optimizer_results),
+        generate_brief(req.stats, results),
         media_type="text/plain"
     )
 
 @app.post("/api/brief-finetuned")
 def generate_brief_finetuned(req: BriefRequest):
     """Generate fine-tuned Qwen policy brief, fallback to Claude"""
+    results = req.optimizer_results if isinstance(req.optimizer_results, list) else [req.optimizer_results]
+    for res in results:
+        if "pop_gain" in res and "pop_gained" not in res:
+            res["pop_gained"] = res["pop_gain"]
+
     try:
         stats_str = json.dumps(req.stats, indent=2)
-        locations_str = json.dumps(req.optimizer_results[:3], indent=2) if req.optimizer_results else "No specific locations"
+        locations_str = json.dumps(results[:3], indent=2) if results else "No specific locations"
         
         prompt = f"""Given these facility placement statistics:
 {stats_str}
@@ -113,7 +123,7 @@ Generate a policy brief for Canadian health authorities."""
         # Fallback to Claude if fine-tuned model fails
         try:
             stats_str = json.dumps(req.stats, indent=2)
-            locations_str = json.dumps(req.optimizer_results[:3], indent=2) if req.optimizer_results else "No specific locations"
+            locations_str = json.dumps(results[:3], indent=2) if results else "No specific locations"
             
             prompt = f"""You are a healthcare policy analyst specializing in rural surgical access in Canada.
 
