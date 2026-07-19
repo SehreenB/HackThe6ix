@@ -113,7 +113,7 @@ Generate a concise, 500-800 word policy brief for Canadian provincial health aut
 Start with an Executive Summary, then provide Key Findings and Recommendations."""
 
             with anthropic_client.messages.stream(
-                model="claude-3-5-sonnet-20240620",
+                model="claude-opus-4-1",
                 max_tokens=1500,
                 messages=[{"role": "user", "content": prompt}]
             ) as stream:
@@ -166,7 +166,7 @@ Top recommended facility locations:
 Generate a policy brief for Canadian health authorities."""
 
             response = anthropic_client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-opus-4-1",
                 max_tokens=1500,
                 messages=[{"role": "user", "content": prompt}]
             )
