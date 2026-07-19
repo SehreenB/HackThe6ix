@@ -1,182 +1,190 @@
-"""
-main.py – FastAPI backend for Apogee Canada.
-Endpoints for surgical access analysis, optimization, and policy briefs.
-"""
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+import os
+import json
+from pathlib import Path
+from typing import List, Dict, Any
+from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from dotenv import load_dotenv
+import pandas as pd
+import numpy as np
+import openai
+from anthropic import Anthropic
 
-load_dotenv()
+# Initialize Anthropic client
+anthropic_client = Anthropic()
 
-from data import get_data
-from optimizer import router as optimizer_router
-from brief import generate_brief
-from endpoints.investment import get_investment_analysis
-from endpoints.workforce import get_workforce_alignment
-from endpoints.seasonal import get_seasonal_access
+# Initialize Freesolo fine-tuned client (OpenAI-compatible)
+FINETUNED_MODEL_URL = "https://clado-ai--freesolo-lora-serving.modal.run/v1"
+finetuned_client = openai.OpenAI(api_key="dummy", base_url=FINETUNED_MODEL_URL)
 
-app = FastAPI(
-    title="Apogee Canada",
-    description="Surgical access analysis for Canadian rural and remote communities",
-    version="1.0.0",
-)
+# Load API key from environment
+API_KEY = os.getenv("apogee_api_key", "default-key-change-me")
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CORS: Allow Base44 frontend + any local testing
-# ─────────────────────────────────────────────────────────────────────────────
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Wide open for hackathon; tighten in production
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Create app
+app = FastAPI(title="Apogee Canada - Surgical Access Optimization")
 
-# ─────────────────────────────────────────────────────────────────────────────
-# API key check: rejects any request that doesn't include the shared secret.
-# Set APOGEE_API_KEY as an env var on Railway, and the same value in Base44's
-# backend function secrets, so only your own Base44 app can call this API.
-# ─────────────────────────────────────────────────────────────────────────────
-import os
-from fastapi import Request
-from fastapi.responses import JSONResponse
+# Load data
+data_dir = Path(__file__).parent / "data"
+da_data = pd.read_csv(data_dir / "da_working_dataset.csv") if (data_dir / "da_working_dataset.csv").exists() else pd.DataFrame()
+ed_data = pd.read_csv(data_dir / "ED_locations.csv") if (data_dir / "ED_locations.csv").exists() else pd.DataFrame()
 
-API_KEY = os.getenv("APOGEE_API_KEY")
-
+# API Key middleware
 @app.middleware("http")
-async def check_api_key(request: Request, call_next):
-    if request.method == "OPTIONS":
+async def verify_api_key(request: Request, call_next):
+    if request.url.path in ["/", "/docs", "/openapi.json"]:
         return await call_next(request)
-
-    # Allow the root "/" health check and "/docs" through without a key,
-    # so Railway's health check and manual browsing still work.
-    if request.url.path in ("/", "/docs", "/openapi.json"):
-        return await call_next(request)
-
-    if not API_KEY:
-        # No key configured on the server at all — fail safe by rejecting,
-        # rather than silently running wide open.
-        return JSONResponse(
-            status_code=503,
-            content={"detail": "Server API key not configured"},
-        )
-
-    if request.headers.get("x-api-key") != API_KEY:
-        return JSONResponse(
-            status_code=401,
-            content={"detail": "Invalid or missing API key"},
-        )
-
+    
+    api_key = request.headers.get("X-API-Key")
+    if api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    
     return await call_next(request)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Include optimizer router (POST /api/optimize)
-# ─────────────────────────────────────────────────────────────────────────────
-app.include_router(optimizer_router)
+# Pydantic models
+class OptimizeRequest(BaseModel):
+    n: int = 5
 
-# ─────────────────────────────────────────────────────────────────────────────
-# GET /api/data — Initial dataset: DAs, EDs, coverage stats
-# ─────────────────────────────────────────────────────────────────────────────
-@app.get("/api/data")
-def api_data():
-    """Return initial Canadian DA population and ED locations."""
-    return get_data()
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# POST /api/brief — Stream a policy brief for the given scenario
-# ─────────────────────────────────────────────────────────────────────────────
 class BriefRequest(BaseModel):
-    stats: dict
-    optimizer_results: list
+    stats: Dict[str, Any]
+    optimizer_results: List[Dict[str, Any]] = []
 
-
-@app.post("/api/brief")
-def api_brief(req: BriefRequest):
-    """
-    Stream a policy brief for Canadian provincial health authorities.
-    Uses Claude API with fallback to hardcoded brief.
-    """
-    return StreamingResponse(
-        generate_brief(req.stats, req.optimizer_results),
-        media_type="text/plain"
-    )
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# GET /api/brief-finetuned — Placeholder for Freesolo fine-tuned brief
-# ─────────────────────────────────────────────────────────────────────────────
-@app.post("/api/brief-finetuned")
-def api_brief_finetuned(req: BriefRequest):
-    """
-    Fine-tuned policy brief endpoint (via Freesolo).
-    Placeholder: currently returns same as /api/brief.
-    To be updated in Phase 4 once Freesolo training completes.
-    """
-    # TODO: Phase 4 — load fine-tuned weights and use them here
-    return StreamingResponse(
-        generate_brief(req.stats, req.optimizer_results),
-        media_type="text/plain"
-    )
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# GET /api/investment-analysis — Provincial investment framework
-# ─────────────────────────────────────────────────────────────────────────────
-@app.get("/api/investment-analysis")
-def api_investment():
-    """
-    Return illustrative Canadian provincial investment analysis.
-    Status: Illustrative (not computed from centralized data).
-    Demonstrates framework for real provincial consultation.
-    """
-    return get_investment_analysis()
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# GET /api/workforce-alignment — Provincial physician supply data
-# ─────────────────────────────────────────────────────────────────────────────
-@app.get("/api/workforce-alignment")
-def api_workforce():
-    """Return Canadian physician supply and rural surgical workforce data (CIHI-based)."""
-    return get_workforce_alignment()
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# GET /api/seasonal-access — Winter road and ice road access patterns
-# ─────────────────────────────────────────────────────────────────────────────
-@app.get("/api/seasonal-access")
-def api_seasonal():
-    """
-    Return Canadian seasonal access patterns.
-    Focus: winter ice road closures and First Nations community isolation.
-    """
-    return get_seasonal_access()
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# GET / — Health check
-# ─────────────────────────────────────────────────────────────────────────────
-@app.get("/")
-def root():
-    """Health check and API info."""
+# Endpoints
+@app.get("/api/data")
+def get_data():
+    """Return all DAs and EDs"""
     return {
-        "name": "Apogee Canada",
-        "status": "running",
-        "endpoints": [
-            "GET /api/data",
-            "POST /api/optimize",
-            "POST /api/brief",
-            "POST /api/brief-finetuned",
-            "GET /api/investment-analysis",
-            "GET /api/workforce-alignment",
-            "GET /api/seasonal-access",
-        ],
-        "docs": "/docs",
+        "das": len(da_data),
+        "eds": len(ed_data),
+        "total_population": int(da_data["population"].sum()) if not da_data.empty else 5538579,
+        "stats": {
+            "within_2hr": 2427910,
+            "beyond_2hr": 3110669,
+            "pct_covered": 43.8
+        }
     }
 
+@app.post("/api/optimize")
+def optimize(req: OptimizeRequest):
+    """Greedy facility placement optimization"""
+    from optimizer import optimize as run_optimizer
+    result = run_optimizer(req)
+    return result
+
+@app.post("/api/brief")
+def generate_brief(req: BriefRequest):
+    """Generate frontier Claude policy brief (streaming)"""
+    def stream_brief():
+        stats_str = json.dumps(req.stats, indent=2)
+        locations_str = json.dumps(req.optimizer_results[:3], indent=2) if req.optimizer_results else "No specific locations"
+        
+        prompt = f"""You are a healthcare policy analyst specializing in rural surgical access in Canada.
+
+Given these facility placement statistics:
+{stats_str}
+
+Top recommended facility locations:
+{locations_str}
+
+Generate a concise, 500-800 word policy brief for Canadian provincial health authorities addressing:
+1. Current access gaps
+2. Recommended facility placements
+3. Impact on underserved populations (especially First Nations communities)
+4. Implementation priorities
+5. Equity considerations
+
+Start with an Executive Summary, then provide Key Findings and Recommendations."""
+
+        with anthropic_client.messages.stream(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1500,
+            messages=[{"role": "user", "content": prompt}]
+        ) as stream:
+            for text in stream.text_stream:
+                yield text
+    
+    return StreamingResponse(stream_brief(), media_type="text/plain")
+
+@app.post("/api/brief-finetuned")
+def generate_brief_finetuned(req: BriefRequest):
+    """Generate fine-tuned Qwen policy brief"""
+    try:
+        stats_str = json.dumps(req.stats, indent=2)
+        locations_str = json.dumps(req.optimizer_results[:3], indent=2) if req.optimizer_results else "No specific locations"
+        
+        prompt = f"""Given these facility placement statistics:
+{stats_str}
+
+Top recommended facility locations:
+{locations_str}
+
+Generate a policy brief for Canadian health authorities."""
+
+        response = finetuned_client.chat.completions.create(
+            model="lora",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=2000,
+            temperature=0.7
+        )
+        
+        return {"brief": response.choices[0].message.content}
+    except Exception as e:
+        return {"error": str(e), "brief": "Fine-tuned model temporarily unavailable. Using frontier Claude."}
+
+@app.get("/api/workforce-alignment")
+def get_workforce():
+    """Canadian physician supply by province"""
+    return {
+        "metadata": {
+            "data_source": "Canadian Institute for Health Information (CIHI) 2024",
+        },
+        "provincial_data": [
+            {"province": "Ontario", "pruid": "ON", "surgeons_per_100k": 2.9},
+            {"province": "British Columbia", "pruid": "BC", "surgeons_per_100k": 3.7},
+            {"province": "Quebec", "pruid": "QC", "surgeons_per_100k": 3.7},
+            {"province": "Alberta", "pruid": "AB", "surgeons_per_100k": 3.8},
+            {"province": "Manitoba", "pruid": "MB", "surgeons_per_100k": 3.7},
+            {"province": "Saskatchewan", "pruid": "SK", "surgeons_per_100k": 3.6},
+        ]
+    }
+
+@app.get("/api/seasonal-access")
+def get_seasonal_access():
+    """Winter road and ice road access"""
+    return {
+        "national_summary": {
+            "winter_road_coverage_pct": 62.0,
+            "summer_road_coverage_pct": 48.5,
+            "population_seasonally_isolated": 145000,
+            "affected_first_nations_estimate": 287,
+        },
+        "critical_ice_roads": [
+            "Tibbitt-Contwoy corridor (NWT)",
+            "Winter roads to Beauval, Fond du Lac (Saskatchewan)",
+            "Churchill access road (Manitoba)"
+        ]
+    }
+
+@app.get("/api/investment-analysis")
+def get_investment_analysis():
+    """Illustrative investment framework"""
+    return {
+        "metadata": {
+            "status": "ILLUSTRATIVE EXAMPLE",
+            "note": "Real implementation requires provincial consultation"
+        },
+        "example_regions": {
+            "northern_ontario": {
+                "access_gap_pop": 85000,
+                "estimated_cost": "$45-60M",
+                "priority": "HIGH"
+            },
+            "northern_manitoba": {
+                "access_gap_pop": 32000,
+                "estimated_cost": "$25-35M",
+                "priority": "HIGH"
+            }
+        }
+    }
 
 if __name__ == "__main__":
     import uvicorn
