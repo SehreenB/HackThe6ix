@@ -32,7 +32,7 @@ API_KEY = os.getenv("APOGEE_API_KEY")
 
 # Create app
 app = FastAPI(
-    title="Apogee Canada",
+    title="Zenith Canada - Surgical Access Optimization",
     description="Surgical access analysis for Canadian rural and remote communities",
     version="1.0.0",
 )
@@ -172,7 +172,7 @@ def api_seasonal():
 def root():
     """Health check and API info."""
     return {
-        "name": "Apogee Canada",
+        "name": "Zenith Canada",
         "status": "running",
         "endpoints": [
             "GET /api/data",
